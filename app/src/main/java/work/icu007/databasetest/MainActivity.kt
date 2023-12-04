@@ -6,9 +6,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import work.icu007.databasetest.databinding.ActivityMainBinding
+import java.lang.NullPointerException
 
 class MainActivity : AppCompatActivity() {
     private lateinit var aMBinding: ActivityMainBinding
+
     @SuppressLint("Range")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             val db = dbHelper.writableDatabase
             val cursor = db.query("Book", null, null, null, null, null, null)
             if (cursor.moveToFirst()) {
+                // 移动游标到下一行数据，如果有的话。当游标没有更多的数据时 跳出循环
                 do {
                     // 遍历
                     val name = cursor.getString(cursor.getColumnIndex("name"))
@@ -72,6 +75,32 @@ class MainActivity : AppCompatActivity() {
                 } while (cursor.moveToNext())
             }
             cursor.close()
+        }
+        aMBinding.replaceData.setOnClickListener {
+            // 替换数据
+            val db = dbHelper.writableDatabase
+            // 开启事务
+            db.beginTransaction()
+            try {
+                db.delete("Book", null, null)
+                if (false){
+                    //
+                    throw NullPointerException()
+                }
+                val values = ContentValues().apply {
+                    put("name", "吞噬星空")
+                    put("author", "我吃西红柿")
+                    put("pages", 68000)
+                    put("price", 60.99)
+                }
+                db.insert("Book", null, values)
+                db.setTransactionSuccessful() // 表示事务已经执行成功
+            } catch (e: Exception){
+                e.printStackTrace()
+            } finally {
+                //结束事务
+                db.endTransaction()
+            }
         }
     }
 }
